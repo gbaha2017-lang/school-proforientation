@@ -129,17 +129,26 @@ if user_role == "🎒 Оқушы бұрышы":
                     # Егер бұрын толық толтырып қойған болса, бірден 5-қадамға жібереміз
                     if str_web.session_state.users_db[login_iin].get("survey_done", False):
                         str_web.session_state.step = 5
-                        # Мұғалім сынып бекіткен болса көрсету
-if user_folder.get("assigned_class"):
-    str_web.success("🎉 Құттықтаймыз! Сіз сыныпқа бөліндіңіз!")
-    str_web.balloons()
-
-    str_web.markdown(
-        f"## 🎓 Сіз бекітілген сынып: **{user_folder['assigned_class']}**"
-    )
-
-    str_web.info("Жаңа оқу жылында сәттілік тілейміз!")
-                    else:
+                else:
+        current_iin = str_web.session_state.current_user
+        user_folder = str_web.session_state.users_db[current_iin]
+        
+        # Егер мұғалім сыныпқа бөлген болса -> Нәтиже беті
+        if "assigned_class" in user_folder:
+            str_web.success("🎉 Құттықтаймыз! Сіздің нәтижеңіз дайын.")
+            str_web.balloons()
+            str_web.markdown(f"### 🎓 Сіз бөлінген сынып: **{user_folder['assigned_class']}**")
+            str_web.info("Жаңа оқу жылында сәттілік тілейміз!")
+            
+            if str_web.button("Жүйеден шығу 🚪"):
+                str_web.session_state.current_user = None
+                str_web.session_state.step = 2
+                str_web.rerun()
+        
+        # Әйтпесе, бұрынғыдай сауалнаманы толтыру қадамдары
+        else:
+            str_web.sidebar.info(f"👤 Кірген оқушы ЖСН: {current_iin}")
+                else:
                         str_web.session_state.step = 2
                     str_web.rerun()
                 else:
@@ -372,41 +381,26 @@ elif user_role == "👩‍🏫 Мұғалімдер кеңсесі":
             str_web.session_state.current_teacher = None
             str_web.rerun()
 
-        # === ЖАҢА ҚОСЫЛҒАН ОҚУШЫНЫ ӨШІРУ БӨЛІМІ ===
+        # === ОҚУШЫНЫ СЫНЫПҚА БӨЛУ ЖӘНЕ ӨШІРУ ===
         str_web.markdown("---")
-        str_web.subheader("🗑 Оқушыларды басқару")
-        all_iin = list(str_web.session_state.users_db.keys())
-        str_web.markdown("### 🎓 Оқушыны сыныпқа бекіту")
-
-target_iin = str_web.selectbox(
-    "Оқушыны таңдаңыз:",
-    all_iin,
-    key="assign_student"
-)
-
-class_choice = str_web.selectbox(
-    "Сыныпқа бөлу:",
-    ["10 А", "10 Ә", "10 Б"],
-    key="assign_class"
-)
-
-if str_web.button("Сыныпқа бекіту"):
-    str_web.session_state.users_db[target_iin]["assigned_class"] = class_choice
-
-    save_database({
-        "users_db": str_web.session_state.users_db,
-        "teachers_db": str_web.session_state.teachers_db
-    })
-
-    str_web.success(
-        f"{target_iin} оқушысы {class_choice} сыныбына тіркелді!"
-    )
-        if all_iin:
-            target_iin = str_web.selectbox("Өшірілетін оқушының ЖСН-ін таңдаңыз:", all_iin)
-            if str_web.button("❌ Таңдалған оқушыны жүйеден өшіру", type="primary"):
+        str_web.subheader("🛠 Оқушыларды басқару панелі")
+        all_iins = list(str_web.session_state.users_db.keys())
+        target_iin = str_web.selectbox("Оқушыны таңдаңыз:", all_iins)
+        
+        col_m1, col_m2 = str_web.columns(2)
+        with col_m1:
+            class_choice = str_web.selectbox("Сыныпқа бөлу:", ["10 'А'", "10 'Ә'", "10 'Б'"])
+            if str_web.button("💾 Сыныпқа бекіту"):
+                str_web.session_state.users_db[target_iin]["assigned_class"] = class_choice
+                save_database({"users_db": str_web.session_state.users_db, "teachers_db": str_web.session_state.teachers_db})
+                str_web.success(f"Оқушы {class_choice} сыныбына бекітілді!")
+                str_web.rerun()
+        
+        with col_m2:
+            if str_web.button("❌ Оқушыны базадан өшіру", type="primary"):
                 del str_web.session_state.users_db[target_iin]
                 save_database({"users_db": str_web.session_state.users_db, "teachers_db": str_web.session_state.teachers_db})
-                str_web.success(f"Оқушы {target_iin} жойылды!")
+                str_web.success("Оқушы жойылды!")
                 str_web.rerun()
         # ==========================================
 
