@@ -129,6 +129,16 @@ if user_role == "🎒 Оқушы бұрышы":
                     # Егер бұрын толық толтырып қойған болса, бірден 5-қадамға жібереміз
                     if str_web.session_state.users_db[login_iin].get("survey_done", False):
                         str_web.session_state.step = 5
+                        # Мұғалім сынып бекіткен болса көрсету
+if user_folder.get("assigned_class"):
+    str_web.success("🎉 Құттықтаймыз! Сіз сыныпқа бөліндіңіз!")
+    str_web.balloons()
+
+    str_web.markdown(
+        f"## 🎓 Сіз бекітілген сынып: **{user_folder['assigned_class']}**"
+    )
+
+    str_web.info("Жаңа оқу жылында сәттілік тілейміз!")
                     else:
                         str_web.session_state.step = 2
                     str_web.rerun()
@@ -366,6 +376,31 @@ elif user_role == "👩‍🏫 Мұғалімдер кеңсесі":
         str_web.markdown("---")
         str_web.subheader("🗑 Оқушыларды басқару")
         all_iin = list(str_web.session_state.users_db.keys())
+        str_web.markdown("### 🎓 Оқушыны сыныпқа бекіту")
+
+target_iin = str_web.selectbox(
+    "Оқушыны таңдаңыз:",
+    all_iin,
+    key="assign_student"
+)
+
+class_choice = str_web.selectbox(
+    "Сыныпқа бөлу:",
+    ["10 А", "10 Ә", "10 Б"],
+    key="assign_class"
+)
+
+if str_web.button("Сыныпқа бекіту"):
+    str_web.session_state.users_db[target_iin]["assigned_class"] = class_choice
+
+    save_database({
+        "users_db": str_web.session_state.users_db,
+        "teachers_db": str_web.session_state.teachers_db
+    })
+
+    str_web.success(
+        f"{target_iin} оқушысы {class_choice} сыныбына тіркелді!"
+    )
         if all_iin:
             target_iin = str_web.selectbox("Өшірілетін оқушының ЖСН-ін таңдаңыз:", all_iin)
             if str_web.button("❌ Таңдалған оқушыны жүйеден өшіру", type="primary"):
