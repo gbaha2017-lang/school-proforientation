@@ -126,10 +126,14 @@ if user_role == "🎒 Оқушы бұрышы":
             if str_web.button("Жүйеге кіру 🔓", key="stud_login_btn_key"):
                 if login_iin in str_web.session_state.users_db and str_web.session_state.users_db[login_iin]["password"] == login_pass:
                     str_web.session_state.current_user = login_iin
-                    # Егер бұрын толық толтырып қойған болса, бірден 5-қадамға жібереміз
                     if str_web.session_state.users_db[login_iin].get("survey_done", False):
                         str_web.session_state.step = 5
+                    else:
+                        str_web.session_state.step = 2
+                    str_web.rerun()
                 else:
+                    str_web.error("ЖСН немесе құпия сөз қате!")
+
         current_iin = str_web.session_state.current_user
         user_folder = str_web.session_state.users_db[current_iin]
         
@@ -415,6 +419,8 @@ elif user_role == "👩‍🏫 Мұғалімдер кеңсесі":
             
             str_web.write("---")
             str_web.subheader("⚡ Интеллектуалды Зигзаг алгоритмі арқылы сыныптарға бөлу")
+            list_view = ["Тегі","Аты","Сыныбы","Орташа балл","Комбинация"]
+
             if str_web.button("💫 Сыныптарды жинақтауды бастау", key="zigzag_start_btn"):
                 # ... (бұрынғы алгоритм кодыңызды осы жерге қоясыз)
                 str_web.write("Алгоритм жұмыс істеді.")
